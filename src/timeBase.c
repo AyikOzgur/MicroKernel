@@ -3,9 +3,8 @@
 
 #define PLL_M 25
 #define PLL_N 400
-#define PLL_P 1 // for pllp=4
+#define PLL_P 1  // for pllp = 4
 
-volatile long long millis;
 
 void timeBase_init(void)
 {
@@ -46,15 +45,10 @@ void timeBase_init(void)
 
   // Init Systick timer for 1ms interval
   SysTick->CTRL |= SysTick_CTRL_ENABLE_Msk;    // Enable counter
-  SysTick->LOAD = 12499;                       // Update Reload for 1ms
+  SysTick->LOAD = 12500000;                    // Update Reload for 1 sec
   SysTick->VAL = 0;                            // Reset counter
   SysTick->CTRL |= SysTick_CTRL_TICKINT_Msk;   // Enable interrupt
   SysTick->CTRL &= ~(1 << 2);                  // Systick clock source = AHB / 8 => 100 / 8 = 12 Mhz
   NVIC_EnableIRQ(SysTick_IRQn);                // Enable interrupt from NVIC
-  NVIC_SetPriority (SysTick_IRQn, 0);          // Set interrupt priority
-}
-
-void SysTick_Handler(void)
-{
-  millis++;
+  NVIC_SetPriority (SysTick_IRQn, 15);          // Set interrupt priority to low
 }
