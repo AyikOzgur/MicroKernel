@@ -42,13 +42,4 @@ void timeBase_init(void)
   /// AP1 timer = 100 Mhz
   /// AP2 = 100 Mhz
   /// AP2 timer = 100 Mhz
-
-  // Init Systick timer for 1ms interval
-  SysTick->CTRL |= SysTick_CTRL_ENABLE_Msk;    // Enable counter
-  SysTick->LOAD = 12500000;                    // Update Reload for 1 sec
-  SysTick->VAL = 0;                            // Reset counter
-  SysTick->CTRL |= SysTick_CTRL_TICKINT_Msk;   // Enable interrupt
-  SysTick->CTRL &= ~(1 << 2);                  // Systick clock source = AHB / 8 => 100 / 8 = 12 Mhz
-  NVIC_EnableIRQ(SysTick_IRQn);                // Enable interrupt from NVIC
-  NVIC_SetPriority (SysTick_IRQn, 15);          // Set interrupt priority to low
 }

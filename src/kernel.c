@@ -1,8 +1,9 @@
 #include "kernel.h"
 #include <stdint.h>
+#include "stm32f4xx.h"
 
 #define NUMBER_OF_THREADS 3
-#define STACK_SIZE 100
+#define STACK_SIZE 100 // 100 * 4 = 400 bytes
 
 typedef struct Tcb
 {
@@ -16,14 +17,14 @@ Tcb_t *currentStackPtr;
 // Real stack for all threads
 int32_t TCB_STACK[NUMBER_OF_THREADS][STACK_SIZE];
 
-void initStack(int i)
+void initStack(int i, void (*thread)(void))
 {
   tcbs[i].stackPtr = &TCB_STACK[i][STACK_SIZE - 16]; // Stack pointer.
-  TCB_STACK[i][STACK_SIZE - 1] = (1U << 21);         // T bit in PSR to 1 for thumb mode.
-
+  TCB_STACK[i][STACK_SIZE - 1] = (1U << 24);         // T bit in PSR to 1 for thumb mode.
+  TCB_STACK[i][STACK_SIZE - 2] = (int32_t)(thread);  // Program counter.
 }
 
-void addThreads(void (*thread0), void (*thread1), void (*thread2))
+void addThreads(void (*thread0)(void), void (*thread1)(void), void (*thread2)(void))
 {
   __disable_irq();
   tcbs[0].nextPtr = &tcbs[1];
@@ -31,16 +32,13 @@ void addThreads(void (*thread0), void (*thread1), void (*thread2))
   tcbs[2].nextPtr = &tcbs[0];
 
   // Init stack of thread0
-  initStack(0);
-  TCB_STACK[0][STACK_SIZE - 2] = (int32_t)(thread0);
+  initStack(0, thread0);
 
   // Init stack of thread1
-  initStack(1);
-  TCB_STACK[1][STACK_SIZE - 2] = (int32_t)(thread1);
+  initStack(1, thread1);
 
   // Init stack of thread2
-  initStack(2);
-  TCB_STACK[2][STACK_SIZE - 2] = (int32_t)(thread2);
+  initStack(2, thread2);
 
   // Start from thread0
   currentStackPtr = &tcbs[0];
@@ -50,26 +48,50 @@ void addThreads(void (*thread0), void (*thread1), void (*thread2))
 
 void startScheduler(void)
 {
-  /// @TODO : Implement starting scheduler with first thread.
+  // Init Systick timer for 1ms interval
+  SysTick->CTRL |= SysTick_CTRL_ENABLE_Msk;    // Enable counter
+  SysTick->LOAD = 12500000;                    // Update Reload for 1 sec
+  SysTick->VAL = 0;                            // Reset counter
+  SysTick->CTRL |= SysTick_CTRL_TICKINT_Msk;   // Enable interrupt
+  SysTick->CTRL &= ~(1 << 2);                  // Systick clock source = AHB / 8 => 100 / 8 = 12 Mhz
+  NVIC_EnableIRQ(SysTick_IRQn);                // Enable interrupt from NVIC
+  NVIC_SetPriority (SysTick_IRQn, 15);         // Set interrupt priority to low
+
+  __asm("LDR R0, =currentStackPtr");  // Load address of current stack pointer to r0
+  __asm("LDR R2, [R0]");              // Load current stack pointer to r2
+  __asm("LDR SP, [R2]");             // Load CPU stack pointer with current stack pointer
+  __asm("POP {R4-R11}");             // Restore registers that are not saved automatically.
+  __asm("POP {R12}");                // Restore registers that are not saved automatically.
+  __asm("POP {R0-R3}");              // Restore other registers.
+
+  // Skip LR and SPR
+  __asm("ADD SP, SP, #4");
+
+  __asm("POP {LR}");                 // New start location by pooping LR
+
+  // Skip PSR
+  __asm("ADD SP, SP, #4");
+
+  __asm("CPSIE I"); // Enable interrupt.
+  __asm("BX LR");   // Return from handler. with new stack thus new PC with new thread.
+
 }
 
 __attribute__((naked)) void SysTick_Handler(void)
 {
-  __disable_irq();
+  __asm("CPSID I");
 
   // Save the state of current thread to its stack.
-  __asm("PUSH {R4-R11}");             // Save the registers that are not saved automatically
-  __asm("LDR R0 =currentStackPtr");   // Get the address of currentPrt
-  __asm("LDR R1,[R0]");               // Get currentPrt to R1
-  __asm("STR SP,[R1]");               // Store SP register to R1(actually currentPrt)
+  __asm("PUSH {R4-R11}");              // Save the registers that are not saved automatically
+  __asm("LDR R0, =currentStackPtr");   // Get the address of currentPrt
+  __asm("LDR R1, [R0]");               // Get currentPrt to R1
+  __asm("STR SP, [R1]");               // Store SP register to R1(actually currentPrt)
 
   // Load next thread
-  __asm("LDR R1,[R1,#4]");            // Tcb_t->nextPrt offset is 4 bytes.
-  __asm("STR R1,[R0]");               // Update currentPtr (Its address already in R0)
-  __asm("LDR SP,[R1]");               // Update SP also with new currentPtr
-  __asm("POP {R4-R11}");              // Restore registers that are not saved automatically.
-
-  __enable_irq();
-
+  __asm("LDR R1, [R1,#4]");            // Tcb_t->nextPrt offset is 4 bytes.
+  __asm("STR R1, [R0]");               // Update currentPtr (Its address already in R0)
+  __asm("LDR SP, [R1]");               // Update SP also with new currentPtr
+  __asm("POP {R4-R11}");               // Restore registers that are not get automatically.
+  __asm("CPSIE I");
   __asm("BX LR");  // Return from handler. with new stack thus new PC with new thread.
 }
