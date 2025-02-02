@@ -1,12 +1,12 @@
-#include "timeBase.h"
 #include "stm32f4xx.h"
+#include "systemClock.h"
 
 #define PLL_M 25
 #define PLL_N 400
 #define PLL_P 1  // for pllp = 4
 
 
-void timeBase_init(void)
+void initSystemClock(void)
 {
   // Activate HSE and wait it to be ready.
   RCC->CR |= RCC_CR_HSEON;

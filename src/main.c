@@ -1,5 +1,6 @@
+#include <stdlib.h>
 #include "stm32f4xx.h"
-#include "timeBase.h"
+#include "systemClock.h"
 #include "kernel.h"
 
 uint32_t g_counter0 = 0;
@@ -35,9 +36,18 @@ int main(void)
 {
   int i = 0;
 
-  timeBase_init();
-  addThreads(thread0, thread1, thread2);
-  startScheduler();
+  initSystemClock();
+
+  void (*threads[])(void) = {thread0, thread1, thread2};
+  int numThreads = sizeof(threads) / sizeof(threads[0]);
+
+  int stackSize = 100;
+  int *stackSizes = (int*)malloc(sizeof(int) * numThreads);
+  for (int i = 0; i < numThreads; i++)
+    stackSizes[i] = stackSize;
+
+  if (addThreads(threads, numThreads, stackSizes) == 0)
+    startScheduler();
 
   while (1)
   {
