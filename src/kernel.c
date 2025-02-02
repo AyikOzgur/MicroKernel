@@ -21,6 +21,21 @@ int initStack(int i, void (*thread)(void), int stackSize)
   g_tcbs[i].stackPtr = &tcb_stack[stackSize - 16]; // Stack pointer.
   tcb_stack[stackSize - 1] = (1U << 24);           // T bit in PSR to 1 for thumb mode.
   tcb_stack[stackSize - 2] = (int32_t)(thread);    // Program counter.
+  tcb_stack[stackSize - 8] = 12; // R12
+  tcb_stack[stackSize - 7] = 0; // R0
+  tcb_stack[stackSize - 6] = 1; // R1
+  tcb_stack[stackSize - 5] = 2; // R2
+  tcb_stack[stackSize - 4] = 3; // R3
+
+  tcb_stack[stackSize - 9] = 11; // R11
+  tcb_stack[stackSize - 10] = 10; // R10
+  tcb_stack[stackSize - 11] = 9; // R9
+  tcb_stack[stackSize - 12] = 8; // R8
+  tcb_stack[stackSize - 14] = 6; // R6
+  tcb_stack[stackSize - 15] = 5; // R5
+
+  /// @TODO : R4 and R7 indices are missing, they should be found.
+
   return 0;
 }
 

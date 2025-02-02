@@ -7,11 +7,12 @@ uint32_t g_counter0 = 0;
 uint32_t g_counter1 = 0;
 uint32_t g_counter2 = 0;
 
-void thread0(void)
+void thread0(int32_t a)
 {
+  g_counter0 = a; // To test passing argument to the thread.
   while(1)
   {
-    g_counter0++;
+    //g_counter0++;
   }
 }
 
@@ -53,4 +54,6 @@ int main(void)
   {
     i++;
   }
+
+  return 0;
 }
