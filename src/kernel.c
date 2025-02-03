@@ -21,20 +21,23 @@ int initStack(int i, void (*thread)(void), int stackSize)
   g_tcbs[i].stackPtr = &tcb_stack[stackSize - 16]; // Stack pointer.
   tcb_stack[stackSize - 1] = (1U << 24);           // T bit in PSR to 1 for thumb mode.
   tcb_stack[stackSize - 2] = (int32_t)(thread);    // Program counter.
-  tcb_stack[stackSize - 8] = 12; // R12
-  tcb_stack[stackSize - 7] = 0; // R0
-  tcb_stack[stackSize - 6] = 1; // R1
-  tcb_stack[stackSize - 5] = 2; // R2
-  tcb_stack[stackSize - 4] = 3; // R3
+  //tcb_stack[stackSize - 3];    // LR
+  tcb_stack[stackSize - 4] = 12; // R12
+  tcb_stack[stackSize - 5] = 3;  // R3
+  tcb_stack[stackSize - 6] = 2;  // R2
+  tcb_stack[stackSize - 7] = 1;  // R1
+  tcb_stack[stackSize - 8] = 0;  // R0
 
-  tcb_stack[stackSize - 9] = 11; // R11
-  tcb_stack[stackSize - 10] = 10; // R10
-  tcb_stack[stackSize - 11] = 9; // R9
-  tcb_stack[stackSize - 12] = 8; // R8
-  tcb_stack[stackSize - 14] = 6; // R6
-  tcb_stack[stackSize - 15] = 5; // R5
+  tcb_stack[stackSize - 9] = 11;    // R11
+  tcb_stack[stackSize - 10] = 10;   // R10
+  tcb_stack[stackSize - 11] = 9;    // R9
+  tcb_stack[stackSize - 12] = 8;    // R8
+  tcb_stack[stackSize - 13] = 155;  // R7, is wrong
+  tcb_stack[stackSize - 14] = 6;    // R6
+  tcb_stack[stackSize - 15] = 5;    // R5
+  tcb_stack[stackSize - 16] = 4;    // R4
 
-  /// @TODO : R4 and R7 indices are missing, they should be found.
+  /// @TODO : R7 value is wrong in debugger. Probably compiler is using R7 for something else.
 
   return 0;
 }
@@ -91,12 +94,12 @@ void startScheduler(void)
   __asm("LDR R1, [R0]");                // Load current stack pointer to r2
   __asm("LDR SP, [R1]");                // Load CPU stack pointer with current stack pointer
   __asm("POP {R4-R11}");                // Restore registers that are not saved automatically.
-  __asm("POP {R12}");                   // Restore registers that are not saved automatically.
   __asm("POP {R0-R3}");                 // Restore other registers.
+  __asm("POP {R12}");                   // Restore registers that are not saved automatically.
 
   // Skip LR and SPR
   __asm("ADD SP, SP, #4");
-  __asm("POP {LR}");                 // New start location by pooping LR
+  __asm("POP {LR}");                 // New start location by poping LR
   __asm("ADD SP, SP, #4");           // Skip PSR
   __enable_irq();
   __asm("BX LR");                    // Return from handler. with new stack thus LR with new thread.
