@@ -13,7 +13,7 @@ typedef struct Tcb
 Tcb_t *g_tcbs;
 Tcb_t *g_currentStackPtr;
 
-int initStack(int i, void (*thread)(void), int stackSize)
+int initStack(int i, void (*thread)(), int stackSize)
 {
   int32_t *tcb_stack = (int32_t*)malloc(stackSize);
   if (tcb_stack == NULL)
@@ -42,7 +42,7 @@ int initStack(int i, void (*thread)(void), int stackSize)
   return 0;
 }
 
-int addThreads(void (**threadFuncs)(void), int numThreads, int stackSize[])
+int addThreads(void (**threadFuncs)(), int numThreads, int stackSize[])
 {
   if (numThreads <= 0)
     return -1;

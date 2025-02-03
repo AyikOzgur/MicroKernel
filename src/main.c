@@ -26,7 +26,6 @@ void thread1(void)
 
 void thread2(void)
 {
-
   while(1)
   {
     g_counter2++;
@@ -40,7 +39,7 @@ int main(void)
 
   initSystemClock();
 
-  void (*threads[])(void) = {thread0, thread1, thread2};
+  void (*threads[])() = {thread0, thread1, thread2};
   int numThreads = sizeof(threads) / sizeof(threads[0]);
 
   int stackSize = 100;
