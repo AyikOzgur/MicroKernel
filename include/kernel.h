@@ -1,4 +1,7 @@
 #pragma once
 
-void startScheduler(void);
-int addThreads(void (**threadFuncs)(), int numThreads, int stackSize[]);
+void startScheduler(int periodMilliseconds);
+
+int initKernel(int maxNumberOfThreads);
+
+int addThread(void (*threadFunc)(), int stackSize);

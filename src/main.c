@@ -3,57 +3,30 @@
 #include "systemClock.h"
 #include "kernel.h"
 
-uint32_t g_counter0 = 0;
-uint32_t g_counter1 = 0;
-uint32_t g_counter2 = 0;
+#define STACK_SIZE          100
+#define MAX_NUM_THREAD      10
+#define SCHEDULAR_PERIOD_MS 100
 
-void thread0(int32_t a)
-{
-  int localTest = a + 17; // To test passing argument to the thread.
-  while(1)
-  {
-    g_counter0++;
-  }
-}
-
-void thread1(void)
+uint32_t g_counter[4];
+void threadFunc(int32_t index)
 {
   while(1)
   {
-    g_counter1++;
+    g_counter[index]++;
   }
 }
-
-void thread2(void)
-{
-  while(1)
-  {
-    g_counter2++;
-  }
-}
-
 
 int main(void)
 {
-  int i = 0;
-
   initSystemClock();
+  initKernel(MAX_NUM_THREAD);
 
-  void (*threads[])() = {thread0, thread1, thread2};
-  int numThreads = sizeof(threads) / sizeof(threads[0]);
+  addThread(threadFunc, STACK_SIZE);
+  addThread(threadFunc, STACK_SIZE);
+  addThread(threadFunc, STACK_SIZE);
+  addThread(threadFunc, STACK_SIZE);
+  startScheduler(SCHEDULAR_PERIOD_MS);
 
-  int stackSize = 100;
-  int *stackSizes = (int*)malloc(sizeof(int) * numThreads);
-  for (int i = 0; i < numThreads; i++)
-    stackSizes[i] = stackSize;
-
-  if (addThreads(threads, numThreads, stackSizes) == 0)
-    startScheduler();
-
-  while (1)
-  {
-    i++;
-  }
-
+  // After scheduler started, rest of the code won't be executed.
   return 0;
 }
