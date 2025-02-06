@@ -24,9 +24,8 @@ void Semaphore_release(Semaphore_t *self)
 {
   __disable_irq();
   if (self->value < self->maxValue)
-  {
     self->value++;
-  }
+
   __enable_irq();
 }
 

@@ -2,6 +2,8 @@
 #include "stm32f4xx.h"
 #include "systemClock.h"
 #include "kernel.h"
+#include "Semaphore.h"
+#include "Mutex.h"
 
 #define STACK_SIZE          100
 #define MAX_NUM_THREAD      10

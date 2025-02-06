@@ -5,7 +5,7 @@ extern volatile int g_currentThreadId;
 struct Mutex
 {
   volatile int32_t isLocked;      // 1 if locked, 0 if available
-  volatile int32_t ownerThreadId; // ID of the thread that owns the mutex.
+  volatile int32_t ownerThreadId;
 };
 
 void Mutex_init(Mutex_t *self)
