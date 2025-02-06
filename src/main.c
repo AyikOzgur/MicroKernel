@@ -13,6 +13,7 @@ void threadFunc(int32_t index)
   while(1)
   {
     g_counter[index]++;
+    //yieldCurrentThread();
   }
 }
 

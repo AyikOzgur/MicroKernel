@@ -1,7 +1,9 @@
-#include "kernel.h"
-#include <stdint.h>
 #include <stdlib.h>
-#include "stm32f4xx.h"
+#include "kernel.h"
+
+volatile int g_currentThreadId = 0;
+static int g_numberOfThreads = 0;
+static int g_maxNumberOfThread = 0;
 
 typedef struct
 {
@@ -13,13 +15,9 @@ typedef struct
 static Tcb_t *g_tcbs = NULL;
 static volatile Tcb_t *g_currentStackPtr = NULL;
 
-static volatile int g_currentThreadId = 0;
-static int g_numberOfThreads = 0;
-static int g_maxNumberOfThread = 0;
-
 static inline __attribute__((always_inline)) void scheduler(void)
 {
-  // @TODO : More realistic scheduling policy will be implemented. For now just circular.
+  // @ TODO : More realistic scheduling policy will be implemented. For now just circular.
   g_currentThreadId = (g_currentThreadId + 1) % g_numberOfThreads;
   g_currentStackPtr = &g_tcbs[g_currentThreadId];
 }
@@ -114,6 +112,11 @@ void startScheduler(int periodMilliseconds)
   NVIC_EnableIRQ(SysTick_IRQn);                // Enable interrupt from NVIC.
   NVIC_SetPriority (SysTick_IRQn, 15);         // Set interrupt priority to low.
 
+
+  // Pendable service call is used to yield the thread.
+  NVIC_EnableIRQ(PendSV_IRQn);
+  NVIC_SetPriority(PendSV_IRQn, 15);
+
   __asm("LDR R0, =g_currentStackPtr");  // Load address of current stack pointer to R0.
   __asm("LDR R1, [R0]");                // Load current stack pointer to R2.
   __asm("LDR SP, [R1]");                // Load CPU stack pointer with current stack pointer.
@@ -130,6 +133,34 @@ void startScheduler(int periodMilliseconds)
 }
 
 __attribute__((naked)) void SysTick_Handler(void)
+{
+  __disable_irq();
+  // Save the state of current thread to its stack.
+  __asm("PUSH {R4-R11}");                // Save the registers that are not saved automatically.
+  __asm("LDR R0, =g_currentStackPtr");   // Get the address of currentPrt.
+  __asm("LDR R1, [R0]");                 // Get currentPrt to R1.
+  __asm("STR SP, [R1]");                 // Store SP register to R1(actually currentPrt).
+
+  scheduler();                           // Choose next thread and upload its stack to g_currentStackPtr.
+
+  // Load next thread
+  __asm("LDR R1, =g_currentStackPtr");  // Address of new stack pointer.
+  __asm("LDR R2, [R1]");                // R2 hold new stack pointer.
+  __asm("LDR SP, [R2]");                // Update CPU stack pointer.
+  __asm("POP {R4-R11}");                // Restore registers that are not get automatically.
+  __enable_irq();
+  __asm("BX LR");                       // Return from handler. with new stack thus new LR with new thread.
+}
+
+void yieldCurrentThread(void)
+{
+  __disable_irq();
+  SysTick->VAL = 0;                      // Reset systick counter because new thread will start already.
+  __enable_irq();
+  SCB->ICSR |= SCB_ICSR_PENDSVSET_Msk;   // Trigger pendable service that runs scheduler.
+}
+
+__attribute__((naked))  void PendSV_Handler(void)
 {
   __disable_irq();
   // Save the state of current thread to its stack.
