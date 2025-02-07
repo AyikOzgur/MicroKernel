@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include "Mutex.h"
 
 extern volatile int g_currentThreadId;
@@ -8,12 +9,21 @@ struct Mutex
   volatile int32_t ownerThreadId;
 };
 
-void Mutex_init(Mutex_t *self)
+Mutex_t* Mutex_create()
 {
-  __disable_irq();
-  self->isLocked = 0;        // Unlocked state
-  self->ownerThreadId = -1;  // No owner initially
-  __enable_irq();
+  Mutex_t *mutex = (Mutex_t*)malloc(sizeof(Mutex_t));
+  if (mutex != NULL)
+  {
+    mutex->isLocked = 0;        // Unlocked state
+    mutex->ownerThreadId = -1;  // No owner initially
+  }
+  return mutex;
+}
+
+void Mutex_destroy(Mutex_t *self)
+{
+  if (self != NULL)
+    free(self);
 }
 
 void Mutex_lock(Mutex_t *self)

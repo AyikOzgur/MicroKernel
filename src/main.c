@@ -7,15 +7,36 @@
 
 #define STACK_SIZE          100
 #define MAX_NUM_THREAD      10
-#define SCHEDULAR_PERIOD_MS 100
+#define SCHEDULAR_PERIOD_MS 10
 
-uint32_t g_counter[4];
-void threadFunc(int32_t index)
+uint32_t g_sharedData = 0;
+Mutex_t *g_sharedDataMutex;
+Semaphore_t *g_dataAvailableSem;
+
+void producerThreadFunc()
 {
-  while(1)
+  while (1)
   {
-    g_counter[index]++;
-    //yieldCurrentThread();
+    Mutex_lock(g_sharedDataMutex);
+    g_sharedData++;
+    Mutex_unlock(g_sharedDataMutex);
+
+    // Signal that new data is available
+    Semaphore_release(g_dataAvailableSem);
+  }
+}
+
+void consumerThreadFunc()
+{
+  uint32_t readValue = 0;
+  while (1)
+  {
+    // Wait until data is available
+    Semaphore_acquire(g_dataAvailableSem);
+
+    Mutex_lock(g_sharedDataMutex);
+    readValue = g_sharedData;
+    Mutex_unlock(g_sharedDataMutex);
   }
 }
 
@@ -24,12 +45,17 @@ int main(void)
   initSystemClock();
   initKernel(MAX_NUM_THREAD);
 
-  addThread(threadFunc, STACK_SIZE);
-  addThread(threadFunc, STACK_SIZE);
-  addThread(threadFunc, STACK_SIZE);
-  addThread(threadFunc, STACK_SIZE);
+  // Create a mutex for shared data access
+  g_sharedDataMutex = Mutex_create();
+
+  // Create a semaphore with initial value 0 (consumer waits) and max value 1.
+  g_dataAvailableSem = Semaphore_create(0, 1);
+
+  // Add producer and consumer threads
+  addThread(producerThreadFunc, STACK_SIZE);
+  addThread(consumerThreadFunc, STACK_SIZE);
+
   startScheduler(SCHEDULAR_PERIOD_MS);
 
-  // After scheduler started, rest of the code won't be executed.
-  return 0;
+  return 0; // Code execution never reaches here
 }

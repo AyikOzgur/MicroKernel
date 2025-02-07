@@ -1,24 +1,21 @@
 #include <stdlib.h>
 #include "kernel.h"
+#include "kernelInternals.h"
 
 volatile int g_currentThreadId = 0;
-static int g_numberOfThreads = 0;
-static int g_maxNumberOfThread = 0;
+int g_numberOfThreads = 0;
+int g_maxNumberOfThread = 0;
 
-typedef struct
-{
-  int32_t *stackPtr;
-  uint8_t threadId;  // Will be used for future scheduling policy.
-  uint8_t priority;  // Will be used for future scheduling policy.
-}Tcb_t;
-
-static Tcb_t *g_tcbs = NULL;
+Tcb_t *g_tcbs = NULL;
 static volatile Tcb_t *g_currentStackPtr = NULL;
 
 static inline __attribute__((always_inline)) void scheduler(void)
 {
-  // @ TODO : More realistic scheduling policy will be implemented. For now just circular.
-  g_currentThreadId = (g_currentThreadId + 1) % g_numberOfThreads;
+  do
+  {
+    g_currentThreadId = (g_currentThreadId + 1) % g_numberOfThreads;
+  } while (g_tcbs[g_currentThreadId].isSleeping);  // Skip sleeping threads
+
   g_currentStackPtr = &g_tcbs[g_currentThreadId];
 }
 
@@ -80,6 +77,7 @@ int addThread(void (*threadFunc)(), int stackSize)
   // Probably these are going to be needed for more sophisticated scheduling policy.
   g_tcbs[g_numberOfThreads].threadId = g_numberOfThreads;
   g_tcbs[g_numberOfThreads].priority = 0;
+  g_tcbs[g_numberOfThreads].isSleeping = 0;
 
   g_numberOfThreads++;
   __enable_irq();
