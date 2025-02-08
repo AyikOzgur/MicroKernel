@@ -1,0 +1,25 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36" version="26.0.11">
+  <diagram name="Sayfa -1" id="G1FG1ggqAdI3GWe0c1Fe">
+    <mxGraphModel dx="1154" dy="532" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="IdSBsM91Dxoe-15VNulh-4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="IdSBsM91Dxoe-15VNulh-1" target="IdSBsM91Dxoe-15VNulh-2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="IdSBsM91Dxoe-15VNulh-1" value="initKernel(&amp;lt;with max number of threads&amp;gt;)" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="100" y="130" width="340" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="IdSBsM91Dxoe-15VNulh-5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="IdSBsM91Dxoe-15VNulh-2" target="IdSBsM91Dxoe-15VNulh-3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="IdSBsM91Dxoe-15VNulh-2" value="All initializtions of&amp;nbsp;synchronization primitives and adding threads." style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="100" y="270" width="340" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="IdSBsM91Dxoe-15VNulh-3" value="startScheduler(&amp;lt;with scheduler interval in milliseconds&amp;gt;),&lt;div&gt;after this step rest of the code wont be exceuted.&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="100" y="420" width="340" height="100" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
