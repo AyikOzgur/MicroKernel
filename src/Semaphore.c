@@ -1,8 +1,6 @@
-#include "../MicroKernel/include/Semaphore.h"
-
 #include <stdlib.h>
-
-#include "../MicroKernel/include/kernelInternals.h"
+#include "Semaphore.h"
+#include "kernelInternals.h"
 
 extern Tcb_t *g_tcbs;
 extern int g_currentThreadId;

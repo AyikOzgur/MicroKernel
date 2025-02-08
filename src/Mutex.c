@@ -1,4 +1,4 @@
-#include "../MicroKernel/include/Mutex.h"
+#include "Mutex.h"
 
 #include <stdlib.h>
 

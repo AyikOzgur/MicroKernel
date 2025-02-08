@@ -1,8 +1,6 @@
-#include "../MicroKernel/include/kernel.h"
-
 #include <stdlib.h>
-
-#include "../MicroKernel/include/kernelInternals.h"
+#include "kernel.h"
+#include "kernelInternals.h"
 
 volatile int g_currentThreadId = 0;
 int g_numberOfThreads = 0;
