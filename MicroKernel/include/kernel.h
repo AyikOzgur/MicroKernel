@@ -3,4 +3,4 @@
 
 int initKernel(int maxNumberOfThreads);
 int addThread(void (*threadFunc)(), int stackSize);
-void startScheduler(int periodMilliseconds);
+int startScheduler(int periodMilliseconds);

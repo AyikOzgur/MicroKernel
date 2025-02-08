@@ -1,6 +1,8 @@
+#include "../MicroKernel/include/kernel.h"
+
 #include <stdlib.h>
-#include "kernel.h"
-#include "kernelInternals.h"
+
+#include "../MicroKernel/include/kernelInternals.h"
 
 volatile int g_currentThreadId = 0;
 int g_numberOfThreads = 0;
@@ -84,10 +86,10 @@ int addThread(void (*threadFunc)(), int stackSize)
   return 0;
 }
 
-void startScheduler(int periodMilliseconds)
+int startScheduler(int periodMilliseconds)
 {
   if (g_numberOfThreads < 0)
-    return;
+    return -1;
 
   __disable_irq();
 

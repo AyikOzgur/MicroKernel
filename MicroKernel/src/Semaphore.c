@@ -1,9 +1,10 @@
+#include "../MicroKernel/include/Semaphore.h"
+
 #include <stdlib.h>
-#include "Semaphore.h"
-#include "kernelInternals.h"
+
+#include "../MicroKernel/include/kernelInternals.h"
 
 extern Tcb_t *g_tcbs;
-
 extern int g_currentThreadId;
 extern int g_numberOfThreads;
 
@@ -44,7 +45,7 @@ Semaphore_t* Semaphore_create(int32_t initialValue, uint32_t maxValue)
 void Semaphore_destroy(Semaphore_t *self)
 {
   if (self == NULL)
-    return;  // Avoid dereferencing a NULL pointer
+    return;
 
   __disable_irq();
 
@@ -52,7 +53,7 @@ void Semaphore_destroy(Semaphore_t *self)
   if (self->waitingThreads != NULL)
   {
     free(self->waitingThreads);
-    self->waitingThreads = NULL;  // Prevent dangling pointer issues
+    self->waitingThreads = NULL;
   }
 
   // Free the semaphore structure itself
@@ -60,7 +61,6 @@ void Semaphore_destroy(Semaphore_t *self)
 
   __enable_irq();
 }
-
 
 void Semaphore_release(Semaphore_t *self)
 {
@@ -78,7 +78,7 @@ void Semaphore_release(Semaphore_t *self)
   }
   __enable_irq();
 
-  /* TODO : Normally without triggering scheduler, anyway other threads should wake up with systick haandler scheduler.
+  /* TODO : Normally without triggering scheduler, anyway other threads should wake up with systick handler scheduler.
             But When we remove manual triggering of scheduler, waiting thread does not wake up. This issue should be
             investigated.
   */

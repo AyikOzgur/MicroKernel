@@ -1,5 +1,6 @@
+#include "../MicroKernel/include/Mutex.h"
+
 #include <stdlib.h>
-#include "Mutex.h"
 
 extern volatile int g_currentThreadId;
 
