@@ -9,6 +9,69 @@ int g_maxNumberOfThread = 0;
 Tcb_t *g_tcbs = NULL;
 static volatile Tcb_t *g_currentStackPtr = NULL;
 
+#ifdef TRACER_ON
+
+/// Circular buffer to store trace events.
+volatile TraceEvent_t g_traceBuffer[TRACER_BUFFER_SIZE];
+/// Pointer to the next write location in the circular buffer.
+volatile TraceEvent_t* gp_traceWritePtr = g_traceBuffer;
+/// Number of tracers inside buffer;
+uint32_t g_traceCount = 0;
+/// Flag to check if buffer is full to send tracer datas.
+uint8_t g_isTracerBufferFull = 0;
+
+volatile uint32_t g_tick = 0;
+
+static inline void storeTraceEvent(uint16_t deltaTime, TraceEventType eventType, uint16_t threadId)
+{
+  gp_traceWritePtr->deltaTime = deltaTime & 0x03FF;    // mask to 10 bits
+  gp_traceWritePtr->eventType = eventType & 0x03;      // mask to 2 bits
+  gp_traceWritePtr->threadId  = threadId  & 0x0F;      // mask to 4 bits
+
+  // Advance the pointer and wrap around if necessary.
+  gp_traceWritePtr++;
+  if (gp_traceWritePtr >= g_traceBuffer + TRACER_BUFFER_SIZE)
+    gp_traceWritePtr = g_traceBuffer;
+
+  g_traceCount++;  // Increment the count of stored events.
+
+  // If the buffer is full, enable flag to inform tracer thread.
+  if (g_traceCount >= TRACER_BUFFER_SIZE)
+    g_isTracerBufferFull = 1;
+}
+
+void tracerTask(void)
+{
+  while (1)
+  {
+    // Poll the flag.
+    if (g_isTracerBufferFull)
+    {
+      // Disable interrupts to ensure a consistent snapshot.
+      __disable_irq();
+
+      // Calculate the number of bytes to send.
+      int size = g_traceCount * sizeof(TraceEvent_t);
+
+      // Send the entire trace buffer. (Assuming the buffer is contiguous.)
+      sendTracerData((uint8_t*)g_traceBuffer, size);
+
+      // Reset the buffer pointers and counter.
+      gp_traceWritePtr = g_traceBuffer;
+      g_traceCount = 0;
+      g_isTracerBufferFull = 0;
+
+      __enable_irq();
+    }
+    else
+    {
+      yieldCurrentThread();
+    }
+  }
+}
+
+#endif
+
 static inline __attribute__((always_inline)) void scheduler(void)
 {
   do
@@ -90,6 +153,10 @@ int startScheduler(int periodMilliseconds)
 
   __disable_irq();
 
+#ifdef TRACER_ON
+  addThread(tracerTask, TRACER_THREAD_STACK_SIZE); // Add tracer thread to scheduler.
+#endif
+
   // Ensure periodMilliseconds is valid
   if (periodMilliseconds <= 0)
     periodMilliseconds = 1;
@@ -139,6 +206,11 @@ __attribute__((naked)) void SysTick_Handler(void)
 
   scheduler();                           // Choose next thread and upload its stack to g_currentStackPtr.
 
+#ifdef TRACER_ON
+  g_tick++;
+  storeTraceEvent(g_tick, TRACE_EVENT_SYSTICK, g_currentThreadId);
+#endif
+
   // Load next thread
   __asm("LDR R1, =g_currentStackPtr");  // Address of new stack pointer.
   __asm("LDR R2, [R1]");                // R2 hold new stack pointer.
@@ -166,6 +238,10 @@ __attribute__((naked))  void PendSV_Handler(void)
   __asm("STR SP, [R1]");                 // Store SP register to R1(actually currentPrt).
 
   scheduler();                           // Choose next thread and upload its stack to g_currentStackPtr.
+
+#ifdef TRACER_ON
+  storeTraceEvent(g_tick, TRACE_EVENT_PENDSV, g_currentThreadId);
+#endif
 
   // Load next thread
   __asm("LDR R1, =g_currentStackPtr");  // Address of new stack pointer.
