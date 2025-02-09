@@ -37,7 +37,7 @@
 
 **MicroKernel** provides a few main concurrency features.
 
-- Main concurrency implementation with a simple scheduler and context switching. Please see the section [kernel](#kernel) for detailed information.
+- Main concurrency implementation with a simple scheduler and context switching. Please see the section [kernel](#kernel-interface) for detailed information.
 - Mutex for critical sections. Please see the the section [Mutex](#mutex) for detailed information.
 - Semaphore for critical sections. Please see the the section [Semaphore](#semaphore) for detailed information.
 

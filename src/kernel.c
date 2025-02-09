@@ -36,7 +36,7 @@ int initStack(int i, void (*threadFunc)(), int stackSize)
 {
   int32_t *tcb_stack = (int32_t*)malloc(stackSize);
   if (tcb_stack == NULL)
-	  return -1;
+    return -1;
 
   g_tcbs[i].stackPtr = &tcb_stack[stackSize - 16];     // Stack pointer.
   tcb_stack[stackSize - 1] = (1U << 24);               // T bit in PSR to 1 for thumb mode.
@@ -67,8 +67,7 @@ int addThread(void (*threadFunc)(), int stackSize)
 
   __disable_irq();
 
-  int ret = initStack(g_numberOfThreads, threadFunc, stackSize);
-  if (ret != 0)
+  if (initStack(g_numberOfThreads, threadFunc, stackSize) != 0)
   {
     __enable_irq();
     return -1;
@@ -109,7 +108,6 @@ int startScheduler(int periodMilliseconds)
   SysTick->CTRL &= ~(1 << 2);                  // Systick clock source = AHB / 8 => 100 / 8 = 12 Mhz.
   NVIC_EnableIRQ(SysTick_IRQn);                // Enable interrupt from NVIC.
   NVIC_SetPriority (SysTick_IRQn, 15);         // Set interrupt priority to low.
-
 
   // Pendable service call is used to yield the thread.
   NVIC_EnableIRQ(PendSV_IRQn);
