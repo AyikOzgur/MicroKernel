@@ -1,6 +1,9 @@
 #pragma once
 #include "kernelConfig.h"
 
+/**
+ * Thread control block (TCB) structure.
+ */
 typedef struct
 {
   int32_t *stackPtr;
@@ -11,13 +14,20 @@ typedef struct
 
 
 #ifdef TRACER_ON
+
+/**
+ * Trace event structure.
+ */
 typedef struct __attribute__((packed))
 {
-  uint16_t deltaTime : 10;  // 10 bits for delta time (0–1023)
-  uint16_t eventType : 2;   // 2 bits for event type (0–3)
-  uint16_t threadId  : 4;   // 4 bits for thread ID (0–15)
+  uint16_t deltaTime : 10;  // 10 bits for delta time (0ï¿½1023)
+  uint16_t eventType : 2;   // 2 bits for event type (0ï¿½3)
+  uint16_t threadId  : 4;   // 4 bits for thread ID (0ï¿½15)
 } TraceEvent_t;
 
+/**
+ * Trace event type enumeration.
+ */
 typedef enum
 {
   TRACE_EVENT_SYSTICK = 0, // Scheduler tick event (e.g., after SysTick)

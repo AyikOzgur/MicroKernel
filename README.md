@@ -11,6 +11,7 @@
   - [initKernel method](#initkernel-method)
   - [addThread method](#addthread-method)
   - [startScheduler method](#startscheduler-method)
+  - [yieldCurrentThread](#yieldcurrentthread-method)
 - [Synchronization primitives](#synchronization-primitives)
   - [Mutex](#mutex)
   - [Semaphore](#semaphore)
@@ -59,6 +60,10 @@ int addThread(void (*threadFunc)(), int stackSize);
 
 /// Start scheduler.
 int startScheduler(int periodMilliseconds);
+
+/// Runs scheduler to for context switch.
+void yieldCurrentThread(void);
+
 ```
 
 ## initKernel method
@@ -103,6 +108,14 @@ int startScheduler(int periodMilliseconds);
 | periodMilliseconds | Scheduler interval in milliseconds. |
 
 **Returns:** -1 if it is not started, in case of proper execution this function does not return.
+
+## yieldCurrentThread method
+
+Runs scheduler to contex switch. So current thread will be yield and next thread will be run.
+
+```c
+void yieldCurrentThread(void);
+```
 
 
 

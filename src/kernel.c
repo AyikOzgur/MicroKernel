@@ -20,13 +20,13 @@ uint32_t g_traceCount = 0;
 /// Flag to check if buffer is full to send tracer datas.
 uint8_t g_isTracerBufferFull = 0;
 
-volatile uint32_t g_tick = 0;
+volatile uint16_t g_tick = 0;
 
-static inline void storeTraceEvent(uint16_t deltaTime, TraceEventType eventType, uint16_t threadId)
+static inline void storeTraceEvent(TraceEventType eventType)
 {
-  gp_traceWritePtr->deltaTime = deltaTime & 0x03FF;    // mask to 10 bits
-  gp_traceWritePtr->eventType = eventType & 0x03;      // mask to 2 bits
-  gp_traceWritePtr->threadId  = threadId  & 0x0F;      // mask to 4 bits
+  gp_traceWritePtr->deltaTime = g_tick & 0x03FF;                     // mask to 10 bits
+  gp_traceWritePtr->eventType = eventType & 0x03;                    // mask to 2 bits
+  gp_traceWritePtr->threadId  = (uint16_t)g_currentThreadId & 0x0F;  // mask to 4 bits
 
   // Advance the pointer and wrap around if necessary.
   gp_traceWritePtr++;
@@ -208,7 +208,7 @@ __attribute__((naked)) void SysTick_Handler(void)
 
 #ifdef TRACER_ON
   g_tick++;
-  storeTraceEvent(g_tick, TRACE_EVENT_SYSTICK, g_currentThreadId);
+  storeTraceEvent(TRACE_EVENT_SYSTICK);
 #endif
 
   // Load next thread
@@ -240,7 +240,7 @@ __attribute__((naked))  void PendSV_Handler(void)
   scheduler();                           // Choose next thread and upload its stack to g_currentStackPtr.
 
 #ifdef TRACER_ON
-  storeTraceEvent(g_tick, TRACE_EVENT_PENDSV, g_currentThreadId);
+  storeTraceEvent(TRACE_EVENT_PENDSV);
 #endif
 
   // Load next thread
