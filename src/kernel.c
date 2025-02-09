@@ -28,16 +28,15 @@ static inline void storeTraceEvent(TraceEventType eventType)
   gp_traceWritePtr->eventType = eventType & 0x03;                    // mask to 2 bits
   gp_traceWritePtr->threadId  = (uint16_t)g_currentThreadId & 0x0F;  // mask to 4 bits
 
-  // Advance the pointer and wrap around if necessary.
   gp_traceWritePtr++;
-  if (gp_traceWritePtr >= g_traceBuffer + TRACER_BUFFER_SIZE)
-    gp_traceWritePtr = g_traceBuffer;
-
-  g_traceCount++;  // Increment the count of stored events.
+  g_traceCount++;
 
   // If the buffer is full, enable flag to inform tracer thread.
   if (g_traceCount >= TRACER_BUFFER_SIZE)
+  {
     g_isTracerBufferFull = 1;
+    gp_traceWritePtr = g_traceBuffer;  // Reset the pointer to the beginning of the buffer.
+  }
 }
 
 void tracerTask(void)
