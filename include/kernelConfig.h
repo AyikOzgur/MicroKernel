@@ -5,7 +5,7 @@
 /// Tracer buffer item size in terms of scheduler tick.
 #define TRACER_BUFFER_SIZE       1023
 /// Internal tracker thread stack size in bytes.
-#define TRACER_THREAD_STACK_SIZE 400
+#define TRACER_THREAD_STACK_SIZE 800
 
 
 /// Function that will transmit tracer data.

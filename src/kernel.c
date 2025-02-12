@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <string.h>
 #include "kernel.h"
 #include "kernelInternals.h"
 
@@ -22,7 +23,9 @@ uint8_t g_isTracerBufferFull = 0;
 
 volatile uint16_t g_tick = 0;
 
-static inline void storeTraceEvent(TraceEventType eventType)
+uint32_t g_loadVlaue = 0;
+
+static inline void __attribute__((always_inline)) storeTraceEvent(TraceEventType eventType)
 {
   gp_traceWritePtr->deltaTime = g_tick & 0x03FF;                     // mask to 10 bits
   gp_traceWritePtr->eventType = eventType & 0x03;                    // mask to 2 bits
@@ -61,10 +64,6 @@ void tracerTask(void)
       g_isTracerBufferFull = 0;
 
       __enable_irq();
-    }
-    else
-    {
-      yieldCurrentThread();
     }
   }
 }
@@ -147,13 +146,14 @@ int addThread(void (*threadFunc)(), int stackSize)
 
 int startScheduler(int periodMilliseconds)
 {
-  if (g_numberOfThreads < 0)
+  if (g_numberOfThreads < 0 || g_currentStackPtr == NULL)
     return -1;
 
   __disable_irq();
 
 #ifdef TRACER_ON
-  addThread(tracerTask, TRACER_THREAD_STACK_SIZE); // Add tracer thread to scheduler.
+  memset(g_traceBuffer, 0, sizeof(g_traceBuffer));
+  addThread(tracerTask, TRACER_THREAD_STACK_SIZE); // Add tracer sender thread to scheduler.
 #endif
 
   // Ensure periodMilliseconds is valid
@@ -165,6 +165,8 @@ int startScheduler(int periodMilliseconds)
 
   if (loadValue > 0xFFFFFF)
     loadValue = 0xFFFFFF; // Max allowed value for SysTick LOAD register is 24 bit.
+
+  g_loadVlaue = loadValue;
 
   // Init Systick timer for 100 milliseconds interval
   SysTick->CTRL |= SysTick_CTRL_ENABLE_Msk;    // Enable counter.

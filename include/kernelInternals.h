@@ -20,9 +20,9 @@ typedef struct
  */
 typedef struct __attribute__((packed))
 {
-  uint16_t deltaTime : 10;  // 10 bits for delta time (0�1023)
-  uint16_t eventType : 2;   // 2 bits for event type (0�3)
-  uint16_t threadId  : 4;   // 4 bits for thread ID (0�15)
+  uint16_t deltaTime : 10;  // 10 bits for delta time
+  uint16_t eventType : 2;   // 2 bits for event type
+  uint16_t threadId  : 4;   // 4 bits for thread ID
 } TraceEvent_t;
 
 /**
