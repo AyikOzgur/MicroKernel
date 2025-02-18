@@ -9,9 +9,9 @@ extern int g_numberOfThreads;
 struct Semaphore
 {
   volatile int32_t value;
-  uint32_t maxValue;                            // Maximum allowed count
-  uint8_t *waitingThreads;  // Array of sleeping thread IDs
-  uint8_t waitingCount;                         // Number of waiting threads
+  uint32_t maxValue;                 // Maximum allowed count
+  uint8_t *waitingThreads;           // Array of sleeping thread IDs
+  uint8_t waitingCount;              // Number of waiting threads
 };
 
 Semaphore_t* Semaphore_create(int32_t initialValue, uint32_t maxValue)
@@ -76,7 +76,7 @@ void Semaphore_release(Semaphore_t *self)
   }
   __enable_irq();
 
-  /* TODO : Normally without triggering scheduler, anyway other threads should wake up with systick handler scheduler.
+  /* @TODO: Normally without triggering scheduler, anyway other threads should wake up with systick handler scheduler.
             But When we remove manual triggering of scheduler, waiting thread does not wake up. This issue should be
             investigated.
   */
