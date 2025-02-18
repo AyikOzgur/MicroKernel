@@ -37,15 +37,11 @@ void usart2_send_char(char c)
 void usart2_send_string(const char *str)
 {
   while (*str)
-  {
     usart2_send_char(*str++);
-  }
 }
 
 void usart2_send_data(uint8_t *data, int size)
 {
   for (int i = 0; i < size; i++)
-  {
     usart2_send_char(data[i]);
-  }
 }

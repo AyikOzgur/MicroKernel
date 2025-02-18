@@ -3,11 +3,15 @@
 #include "kernel.h"
 #include "kernelInternals.h"
 
+/// Current thread Id.
 volatile int g_currentThreadId = 0;
+/// Number of available threads.
 int g_numberOfThreads = 0;
+/// Max number of threads.
 int g_maxNumberOfThread = 0;
-
+/// Thread control blocks array.
 Tcb_t *g_tcbs = NULL;
+/// Stack pointer of current thread.
 static volatile Tcb_t *g_currentStackPtr = NULL;
 
 #ifdef TRACER_ON
@@ -18,12 +22,11 @@ volatile TraceEvent_t g_traceBuffer[TRACER_BUFFER_SIZE];
 volatile TraceEvent_t* gp_traceWritePtr = g_traceBuffer;
 /// Number of tracers inside buffer;
 uint32_t g_traceCount = 0;
-/// Flag to check if buffer is full to send tracer datas.
+/// Flag to check if buffer is full to send tracer data.
 uint8_t g_isTracerBufferFull = 0;
-
+/// Tick value for tracing context switch moments.
 volatile uint16_t g_tick = 0;
 
-uint32_t g_loadVlaue = 0;
 
 static inline void __attribute__((always_inline)) storeTraceEvent(TraceEventType eventType)
 {
@@ -165,8 +168,6 @@ int startScheduler(int periodMilliseconds)
 
   if (loadValue > 0xFFFFFF)
     loadValue = 0xFFFFFF; // Max allowed value for SysTick LOAD register is 24 bit.
-
-  g_loadVlaue = loadValue;
 
   // Init Systick timer for 100 milliseconds interval
   SysTick->CTRL |= SysTick_CTRL_ENABLE_Msk;    // Enable counter.
