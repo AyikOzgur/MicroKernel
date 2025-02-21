@@ -1,6 +1,6 @@
 # **MicroKernel**
 
-**v1.0.0**
+**v1.1.0**
 
 # Table of contents
 
@@ -15,6 +15,7 @@
 - [Synchronization primitives](#synchronization-primitives)
   - [Mutex](#mutex)
   - [Semaphore](#semaphore)
+- [Tracer feature](#tracer-feature)
 - [Simple Example](#simple-example)
 
 
@@ -30,7 +31,8 @@
 
 | Version | Release date | What's new                                                   |
 | ------- | ------------ | ------------------------------------------------------------ |
-| 1.0.0   | 08.02.2025   | First version.                                               |
+| 1.0.0   | 08.02.2025   | - First version.                                               |
+| 1.1.0   | 21.02.2025   | - Mutex implementation is improved by putting thread to sleep instead of busy waiting. </br> - Tracer feature is implemented.|
 
 
 
@@ -165,7 +167,7 @@ void Mutex_destroy(Mutex_t *self);
 
 ### Mutex_lock
 
-Locks the mutex. In case mutex already locked, it will block current thread from execution with a busy wait until the instance is unlock.
+Locks the mutex. In case mutex already locked, it will put current thread to sleep.
 
 ```c
 void Mutex_lock(Mutex_t *self);
@@ -245,12 +247,30 @@ void Semaphore_release(Semaphore_t *self);
 
 ### Semaphore_acquire method
 
-Acquires the semaphore. If related semaphore has value 0, this will put current thread to sleep unlike mutex implementation semphore implementation wont make any busy wait. Sleeping thread will be waken up when semaphore value is bigger than 0.
-
+Acquires the semaphore. If related semaphore has value 0, this will put current thread to sleep.
 | Parameter       | Value                           |
 | --------------- | ------------------------------- |
 | self | Address of instance. |
 
+
+# Tracer feature
+
+**MicroKernel** supports tracing the scheduler events. It saves events in an internal buffer and calls the user set callback when the buffer is full. So user
+can transmit this buffer by any preferred method to host machine and visualize the kernel scheduler events. Please check [MicroKernelTracer](https://github.com/AyikOzgur/MicroKernelTracer) project, it is an template example that show how to parse this buffer and visualize the scheduler events.
+
+In order to enable tracer feature, please follow the steps : 
+
+1. Change **TRACER_OFF** definition to **TRACER_ON** in /include/kernelConfig.h file.
+
+2. Set callback for transmitting data by using :
+    ```c
+    void setSendTracerDataCallback(void (*func)(uint8_t*, int));
+    ```
+    It is recommended to have a quick transmission in callback function because during this callback all interrupts are disabled so system will no react any coming
+    interrupt and scheduler wont run any thread until callback finishes. 
+
+Note : If transmission of buffer fails, it might be because of stack size of tracer sending thread, because user set callback is invoked by a internal kernel thread.
+So consider increasing TRACER_THREAD_STACK_SIZE from /include/kernelConfig.h file. Also DO NOT change the TRACER_BUFFER_SIZE because current version supports only 1023 events in each buffer.
 
 
 # Simple example
@@ -264,7 +284,7 @@ Following code shows simplest example for **MicroKernel** usage. It implements s
 
 #define THREAD_STACK_SIZE_BYTES  100
 #define MAX_NUM_THREAD           10
-#define SCHEDULAR_PERIOD_MS      10
+#define SCHEDULER_PERIOD_MS      10
 
 uint32_t g_sharedData = 0;
 Mutex_t *g_sharedDataMutex = NULL;
@@ -308,7 +328,7 @@ int main(void)
   addThread(producerThreadFunc, THREAD_STACK_SIZE_BYTES);
   addThread(consumerThreadFunc, THREAD_STACK_SIZE_BYTES);
 
-  startScheduler(SCHEDULAR_PERIOD_MS);
+  startScheduler(SCHEDULER_PERIOD_MS);
 
   return 0; // Code execution never reaches here
 }
