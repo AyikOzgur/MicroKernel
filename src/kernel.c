@@ -21,12 +21,18 @@ volatile TraceEvent_t g_traceBuffer[TRACER_BUFFER_SIZE];
 /// Pointer to the next write location in the circular buffer.
 volatile TraceEvent_t* gp_traceWritePtr = g_traceBuffer;
 /// Number of tracers inside buffer;
-uint32_t g_traceCount = 0;
+volatile uint32_t g_traceCount = 0;
 /// Flag to check if buffer is full to send tracer data.
-uint8_t g_isTracerBufferFull = 0;
+volatile uint8_t g_isTracerBufferFull = 0;
 /// Tick value for tracing context switch moments.
 volatile uint16_t g_tick = 0;
 
+void (*sendTracerData)(uint8_t*, int) = NULL;
+
+void setSendTracerDataCallback(void (*func)(uint8_t*, int))
+{
+  sendTracerData = func;
+}
 
 static inline void __attribute__((always_inline)) storeTraceEvent(TraceEventType eventType)
 {
@@ -42,6 +48,7 @@ static inline void __attribute__((always_inline)) storeTraceEvent(TraceEventType
   {
     g_isTracerBufferFull = 1;
     gp_traceWritePtr = g_traceBuffer;  // Reset the pointer to the beginning of the buffer.
+    g_tcbs[g_numberOfThreads - 1].isSleeping = 0; // Wake up tracer thread.
   }
 }
 
@@ -58,6 +65,8 @@ void tracerTask(void)
       // Calculate the number of bytes to send.
       int size = g_traceCount * sizeof(TraceEvent_t);
 
+      if (sendTracerData != NULL)
+      {
       // Send the entire trace buffer. (Assuming the buffer is contiguous.)
       sendTracerData((uint8_t*)g_traceBuffer, size);
 
@@ -66,7 +75,11 @@ void tracerTask(void)
       g_traceCount = 0;
       g_isTracerBufferFull = 0;
 
+      memset(g_traceBuffer, 0, sizeof(g_traceBuffer));
+      }
+      g_tcbs[g_numberOfThreads - 1].isSleeping = 1; // Sleep again.
       __enable_irq();
+      yieldCurrentThread();
     }
   }
 }
@@ -157,6 +170,7 @@ int startScheduler(int periodMilliseconds)
 #ifdef TRACER_ON
   memset(g_traceBuffer, 0, sizeof(g_traceBuffer));
   addThread(tracerTask, TRACER_THREAD_STACK_SIZE); // Add tracer sender thread to scheduler.
+  g_tcbs[g_numberOfThreads - 1].isSleeping = 1; // Tracer should sleep initially.
 #endif
 
   // Ensure periodMilliseconds is valid

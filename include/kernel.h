@@ -1,5 +1,6 @@
 #pragma once
 #include <stdint.h>
+#include "kernelConfig.h"
 #include "stm32f4xx.h"
 
 /**
@@ -28,3 +29,13 @@ int startScheduler(int periodMilliseconds);
  * Runs the scheduler to switch to the next thread.
  */
 void yieldCurrentThread(void);
+
+#ifdef TRACER_ON
+
+/**
+ * Set the callback function to send tracer data.
+ * @param func The callback function.
+ */
+void setSendTracerDataCallback(void (*func)(uint8_t*, int));
+
+#endif

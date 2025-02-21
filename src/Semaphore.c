@@ -54,7 +54,6 @@ void Semaphore_destroy(Semaphore_t *self)
     self->waitingThreads = NULL;
   }
 
-  // Free the semaphore structure itself
   free(self);
 
   __enable_irq();
@@ -95,7 +94,6 @@ void Semaphore_acquire(Semaphore_t *self)
     yieldCurrentThread();
   }
 
-  // Decrement semaphore value
   self->value--;
   __enable_irq();
 }
