@@ -220,12 +220,12 @@ __attribute__((naked)) void SysTick_Handler(void)
   __asm("LDR R1, [R0]");                 // Get currentPrt to R1.
   __asm("STR SP, [R1]");                 // Store SP register to R1(actually currentPrt).
 
-  scheduler();                           // Choose next thread and upload its stack to g_currentStackPtr.
-
 #ifdef TRACER_ON
   g_tick++;
   storeTraceEvent(TRACE_EVENT_SYSTICK);
 #endif
+
+  scheduler();                           // Choose next thread and upload its stack to g_currentStackPtr.
 
   // Load next thread
   __asm("LDR R1, =g_currentStackPtr");  // Address of new stack pointer.
@@ -253,11 +253,11 @@ __attribute__((naked))  void PendSV_Handler(void)
   __asm("LDR R1, [R0]");                 // Get currentPrt to R1.
   __asm("STR SP, [R1]");                 // Store SP register to R1(actually currentPrt).
 
-  scheduler();                           // Choose next thread and upload its stack to g_currentStackPtr.
-
 #ifdef TRACER_ON
   storeTraceEvent(TRACE_EVENT_PENDSV);
 #endif
+
+  scheduler();                           // Choose next thread and upload its stack to g_currentStackPtr.
 
   // Load next thread
   __asm("LDR R1, =g_currentStackPtr");  // Address of new stack pointer.
